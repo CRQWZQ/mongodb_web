@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../index.css">
+    <script src="../jquery.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+</head>
+
+<body>
+    <div id="app">
+        <div class="page">
+            <div class="title">
+                <div class="left">
+                    <div class="time">
+                        <el-date-picker v-model="value1" type="date" placeholder="选择日期" size="small" format="yyyy-MM-dd" value-format="yyyy-MM-dd">
+                        </el-date-picker>
+                    </div>
+                    <div class="tab">
+                        <span style="margin-right:10px;">所有记录</span>
+                        <el-input placeholder="请输入昵称" v-model="input5" class="input-with-select" style="width: 200px;" size="small">
+
+                            <el-button slot="append" icon="el-icon-search" @click="getDate"></el-button>
+                        </el-input>
+                    </div>
+                </div>
+                <div class="right">
+                    <i class="el-icon-arrow-left"></i>
+                    <i class="el-icon-arrow-right"></i>
+                </div>
+            </div>
+            <div class="content-table">
+                <el-table :data="tableData" border style="width: 100%">
+                    <el-table-column prop="add" label="" fixed="left" width="50">
+                        <template slot-scope="scope">
+                            <span @click="test(scope.row)" style="cursor: pointer;">+</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="nick" label="淘宝账号" fixed="left" width="180">
+                    </el-table-column>
+                    <el-table-column prop="punishCountStr" label="违规记录">
+                    </el-table-column>
+                    <el-table-column prop="noSalesCount" label="不记销量">
+                    </el-table-column>
+                    <el-table-column prop="trueName" label="真实姓名">
+                    </el-table-column>
+                    <el-table-column prop="realRameAuth" label="实名认证">
+                    </el-table-column>
+                    <el-table-column prop="sex" label="性别">
+                    </el-table-column>
+                    <el-table-column prop="birthday" label="生日">
+                    </el-table-column>
+                    <el-table-column prop="credit" label="等级">
+                    </el-table-column>
+                    <el-table-column prop="feedbackRate" label="好评率">
+                    </el-table-column>
+                </el-table>
+
+                <div class="information" v-if="box">
+                    <div class="information-title">
+                        <div>买号信息</div>
+                        <div @click="close" style="cursor: pointer;">X</div>
+                    </div>
+                    <div class="information-content">
+                        <div class="box">
+                            <div class="img">
+                                <img src="" alt="">
+                            </div>
+                            <div class="text">
+                                <p>淘宝账号：{{totalData.nick}}</p>
+                                <p>姓名：{{totalData.trueName}}</p>
+                                <p>性别：{{totalData.sex}}</p>
+                                <p>更新时间：{{totalData.createTime}}</p>
+                            </div>
+                            <div class="text">
+                                <p>淘气值：{{totalData.nick}}</p>
+                                <p>等级：{{totalData.credit}}</p>
+                                <p>生日：{{totalData.birthday}}</p>
+                            </div>
+                        </div>
+                        <div class="collapse">
+                            <el-collapse v-model="activeNames" @change="handleChange">
+                                <el-collapse-item title="违规记录" name="1">
+                                    <div v-if="!IrregularitiesList.length" class="sign">无违规记录</div>
+                                </el-collapse-item>
+                                <el-collapse-item title="评价记录" name="2">
+                                    <div v-if="!evaluateList.length" class="sign">无评价记录</div>
+                                    <!---->
+                                    <div class="evaluate" v-for="evaluate in evaluateList" :class="{'text-color':evaluate.isPoint != '正常计分'}">
+                                        <div class="border">
+                                            <p>评价时间：{{evaluate.date}}</p>
+                                            <p>评价：{{evaluate.reviewTitle}}  &nbsp;&nbsp;<span v-show="evaluate.isPoint != '正常计分'">{{evaluate.isPoint}}</span></p>
+                                            <p>评价内容：{{evaluate.comment}}</p>
+                                        </div>
+                                        <div class="border">
+                                            <p>
+                                                卖家：{{evaluate.shopName}}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p>商品：{{evaluate.tradeTitle}}</p>
+                                            <p>价格：{{evaluate.tradePrice}}</p>
+                                        </div>
+                                    </div>
+                                </el-collapse-item>
+                                <el-collapse-item title="购物记录" name="3">
+                                    <div class="order" v-for="order in orderList">
+                                        <div class="border">
+                                            <p>订单号：{{order.orderId}}</p>
+                                            <p>店铺名：{{order.storeName}}</p>
+                                        </div>
+                                        <div class="border border-both" v-for="g in order.goods" v-show="g.goodsTitle !='保险服务'">
+                                            <div class="img">
+                                                <img :src="g.goodsImg" alt="">
+                                            </div>
+                                            <div class="describe">
+                                                <p>
+                                                    <a :href="g.goodsUrl">{{g.goodsTitle}}</a>
+                                                </p>
+                                                <p>￥{{g.goodsPrice}}</p>
+                                                <p>{{g.goodsSku1}} | {{g.goodsSku2}}{{g.goodsCount}}</p>
+                                            </div>
+                                        </div>
+                                        <div class="border border-both"  v-for="g in order.goods" v-show="g.goodsTitle =='保险服务'">
+                                            <p>保险服务</p>
+                                            <p>￥{{g.goodsPrice}}</p>
+                                        </div>
+                                        <div>
+                                            <p>实际付款：￥{{order.realPay}}</p>
+                                            <p>下单时间：{{order.tradeTime}}</p>
+                                            <p>订单状态：{{order.goodsStatus}}</p>
+                                        </div>
+                                    </div>
+                                </el-collapse-item>
+                            </el-collapse>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="mask" v-if="box">
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+    (function ($) {
+        var app = new Vue({
+            el: "#app",
+            data: {
+                message: "hello",
+                activeName: 'first',
+                value1: '',
+                dialogVisible: false,
+                input5:"",
+                tableData: [/*{
+                    add:"",
+                    nick: '忘记只是没资格记起',
+                    punishCountStr: '0',
+                    noSalesCount: '0',
+                    trueName: '江莉',
+                    realNameAuth: '已实名',
+                    sex: '女',
+                    birthday: '1996年8月3日',
+                    credit: '206',
+                    feedbackRate: '100.00%'
+                }*/],
+                activeNames: ['3'],
+                box: false,
+                totalData:[],
+                orderList: [{
+                    goods:[],
+                    orderId: "174315514571743734",
+                    storeName: "君浩家居生活馆",
+                    goodsImg: "",
+                    goodsTitle: "海绵地垫拼图泡沫卧室大号铺地板家用榻榻米加厚儿童爬行垫子拼接",
+                    goodsPrice: "32.87",
+                    goodsSku1: "咖+米",
+                    goodsSku2: "尺寸：30x30x1.2cm",
+                    goodsCount: "10片",
+                    realPay: "32.87",
+                    tradeTime: "2018-07-30",
+                    goodsStatus: "交易关闭"
+                }],
+                evaluateList: [/*{
+                    date: "2018-07-30 07:42:40",
+                    reviewTitle: "无",
+                    comment: "[来自天猫]先说说烤架得整体感受，很方便实用，而且上面的铁板也不沾，很容易清洗。但是下面的网跟加热管之间的距离有点近，东西稍微大点就没法放进去了。这个是万万没想到的，放些烤肠什么的还行，可是花菜稍微大点就塞不进去了这个有点尴尬。。。",
+                    shopName: "techwood旗舰店",
+                    tradeTitle: "韩式电烧烤炉家用电无烟多功能室内烤盘不粘烤串烤肉机铁板烧烤架",
+                    tradePrice: "428.0"
+                },
+                {
+                    time: "2018-07-30 07:38:12",
+                    evaluation: "好评",
+                    content: "东西很全，就是调料的包有点小了，这个是没太在意的地方，建议购买的时候买大份的",
+                    name: "烧烤用品自选超市",
+                    goodsName: "烧烤工具套装便携全套配件包邮 烧烤炉户外家用配件 烧烤工具配件",
+                    goodsPrice: "56.9"
+                },
+                {
+                    time: "2018-07-28 07:33:41",
+                    evaluation: "好评",
+                    content: "空调暂时不能用，只能靠小风扇续命了，晚上是真的热?",
+                    name: "xwbiao",
+                    goodsName: "大白风扇卡通小风扇 迷你学生床上桌面插电台式宿舍静音床头寝室",
+                    goodsPrice: "47.6"
+                }*/],
+                IrregularitiesList: []
+            },
+            methods: {
+                handleChange(val) {
+                    console.log(val);
+                },
+                test(param) {
+                    this.box = true;
+                    this.orderList = param.ordersInfo;
+                    this.evaluateList = param.commentInfo;
+                    this.totalData = param;
+                    console.log(param)
+                },
+                close() {
+                    this.box = false;
+                },
+                getDate(){
+                    var that = this;
+                    $.get("/info/orders_info?time="+that.value1,function (data) {
+                        console.log(data)
+                        that.totalData = data.data;
+                        that.tableData = that.totalData;
+                        console.log(that.totalData)
+                    })
+                }
+
+            },
+            created: function () {
+                Date.prototype.Format = function (fmt) {
+                    var o = {
+                        "M+": this.getMonth() + 1, //月份
+                        "d+": this.getDate(), //日
+                        "H+": this.getHours(), //小时
+                        "m+": this.getMinutes(), //分
+                        "s+": this.getSeconds(), //秒
+                        "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+                        "S": this.getMilliseconds() //毫秒
+                    };
+                    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+                    for (var k in o)
+                        if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+                    return fmt;
+                }
+
+                this.value1 = new Date().Format("yyyy-MM-dd")
+            },
+            mounted: function () {
+                this.getDate();
+                console.log(this.value1)
+            }
+        })
+
+
+
+    })(jQuery)
+</script>
